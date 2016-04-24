@@ -1,0 +1,130 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+  <head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Lesson 12: Spectral Analysis</title>
+    <base href="https://onlinecourses.science.psu.edu/stat510" />
+    <link type="text/css" rel="stylesheet" href="misc/print.css" />
+      </head>
+  <body>
+        
+    <div id="node-57" class="section-1">
+  <h1 class="book-heading">Lesson 12: Spectral Analysis</h1>
+  <p><strong>Assignments:</strong></p>
+<ul>
+<li>Read Sections 4.3, 4.5, and 4.6 of your text.</li>
+<li>Read through the Lesson 12 online notes that follow.</li>
+<li>Complete Lesson 12 Assignment.</li>
+</ul>
+<p><strong>Overview:</strong></p>
+<p>This week we'll cover estimation of the spectral density.</p>
+<p><strong>Learning Objectives</strong>:</p>
+<p>After successfully completing this lesson, you should be able to:</p>
+<ul>
+<li>Estimate the spectral density non-parametrically (Daniell kernel&nbsp;&amp; modified Daniell kernel)</li>
+<li>Identify and interpret bandwidth</li>
+<li>Estimate&nbsp;the spectral density parametrically</li>
+</ul>
+  <div id="node-80" class="section-2">
+  <h1 class="book-heading">12.1:  Estimating the Spectral Density</h1>
+  <p>We previously discussed the periodogram, a function/graph that displays information about the periodic components of a time series.&nbsp; Any time series can be expressed as a sum of cosine and sine waves oscillating at the fundamental (harmonic) frequencies = <em>j/n</em>, with <em>j</em> = 1, 2, …, <em>n</em>/2.&nbsp; The periodogram gives information about the relative strengths of the various frequencies for explaining the variation in the time series.</p>
+<p>The periodogram is a sample estimate of a population function called the spectral density, which is a frequency domain characterization of a population stationary time series.&nbsp; The spectral density is a frequency domain representation of a time series that is directly related to the autocovariance time domain representation.&nbsp; In essence the spectral density and the autocovariance function contain the same information, but express it in different ways.</p>
+<p>[<em>Review Note</em>: The autocovariance is the numerator of the autocorrelation.&nbsp; The autocorrelation is the autocovariance divided by the variance.]</p>
+<p>Suppose that γ(<em>h</em>) is the autocovariance function of a stationary process and that <em>f </em>(ω) is the spectral density for the same process.&nbsp; In the notation of the previous sentence, <em>h</em> = time lag and ω = frequency.</p>
+<p>The autocovariance and the spectral density have the following relationships:</p>
+<p style="padding-left: 90px;">\(\gamma(h) = \int_{-1/2}^{1/2} e^{2\pi i \omega h} f(\omega) d \omega\), and</p>
+<p style="padding-left: 90px;">\(f(\omega) = \sum_{h=-\infty}^{h=\infty} \gamma(h) e^{-2\pi i \omega h}\)</p>
+<p>In the language of advanced calculus, the autocovariance and spectral density are Fourier transform pairs.&nbsp; We won’t worry about the calculus of the situation.&nbsp; We’ll focus on the estimation of the spectral density – the frequency domain characterization of a series.&nbsp; The Fourier transform equations are only given here to establish that there is a direct link between the time domain representation and the frequency domain representation of a series.</p>
+<p>Mathematically, the spectral density is defined for both negative and positive frequencies.&nbsp; However, due to symmetry of the function and its repeating pattern for frequencies outside the range -1/2 to +1/2, we only need to be concerned with frequencies between 0 and +1/2.</p>
+<p>The “total” integrated spectral density equals the variance of the series.&nbsp; Thus the spectral density within a particular interval of frequencies can be viewed as the amount of the variance explained by those frequencies.</p>
+<p><strong>Methods for Estimating the Spectral Density</strong></p>
+<p>The raw periodogram is a rough sample estimate of the population spectral density.&nbsp; The estimate is “rough”, in part, because we only use the discrete fundamental harmonic frequencies for the periodogram whereas the spectral density is defined over a continuum of frequencies.</p>
+<p>One possible improvement to the periodogram estimate of the spectral density is to smooth it using centered moving averages.&nbsp; An additional “smoothing” can be created using tapering methods which weight the ends (in time) of the series less than the center of the data.&nbsp; We’ll not cover tapering in this lesson.&nbsp; Interested parties can see Section 4.5 in the book and various Internet sources.</p>
+<p>An alternative approach to smoothing the periodogram is a parametric estimation approach based on the fact that any stationary time series can be approximated by an AR model of some order (although it might be a high order).&nbsp; In this approach a suitable AR model is found, and then the spectral density is estimated as the spectral density for that estimated AR model.</p>
+<p><strong>Smoothing Method (Nonparametric Estimation of the Spectral Density)</strong></p>
+<p>The usual method for smoothing a periodogram has such a fancy name that it sounds difficult.&nbsp; In fact, it’s merely a centered moving average procedure with a few possible modifications.&nbsp; For a time series, the Daniell kernel with parameter <em>m</em> is a centered moving average which creates a smoothed value at time <em>t</em> by averaging all values between times <em>t – m</em> and <em>t +m</em> (inclusive).&nbsp; For example, the smoothing formula for a Daniell kernel with <em>m</em> = 2 is</p>
+<p style="padding-left: 30px;">\[\hat{x}_t = \frac{x_{t-2}+x_{t-1}+x_t + x_{t+1}+x_{t+2}}{5}\]</p>
+<p>In R, the weighting coefficients for a Daniell kernel with <em>m</em> = 2 can be generated with the command<span style="font-family: courier new,courier;"> <span style="font-size: small;">kernel("daniell", 2)</span>.</span>&nbsp; The result is</p>
+<p style="padding-left: 30px;"><span style="font-family: courier new,courier;"><span style="font-size: small;">coef[-2] = 0.2<br />coef[-1] = 0.2<br />coef[ 0] = 0.2<br />coef[ 1] = 0.2<br />coef[ 2] = 0.2</span></span></p>
+<p>The subscripts for coef [ ] refer to the time difference from the center of the average at time <em>t</em>.&nbsp; Thus the smoothing formula in this instance is</p>
+<p style="padding-left: 30px;">\[\hat{x}_t = 0.2x_{t-2} + 0.2x_{t-1} +0.2x_t + 0.2x_{t+1} +0.2x_{t+2},\]</p>
+<p>which is the same as the formula given above.</p>
+<p>The modified Daniell kernel is such that the two endpoints in the averaging receive half the weight that the interior points do.&nbsp; For a modified Daniell kernel with <em>m</em> = 2, the smoothing is</p>
+<p style="padding-left: 30px;">\[\hat{x}_t = \frac{x_{t-2}+2x_{t-1}+2x_t + 2x_{t+1} + x_{t+2}}{8} = 0.125x_{t-2} +0.25x_{t-1}+0.25x_t+0.25x_{t+1}+0.125x_{t+2}\]</p>
+<p>In R, the command <span style="font-size: small;"><span style="font-family: terminal,monaco;">kernel("modified.daniell", 2)</span></span> will list the weighting coefficients just used.</p>
+<p>Either the Daniell kernel or the modified Daniell kernel can be convoluted (repeated) so that the smoothing is applied again to the smoothed values.&nbsp; This produces a more extensive smoothing by averaging over a wider time interval.&nbsp; For instance, to repeat a Daniell kernel with <em>m</em> = 2 on the smoothed values that resulted from a Daniell kernel with <em>m</em> = 2, the formula would be</p>
+<p style="padding-left: 30px;">\[\hat{\hat{x}}_t = \frac{\hat{x}_{t-2}+\hat{x}_{t-1}+\hat{x}_t +\hat{x}_{t+1}+\hat{x}_{t+2}}{5}\]</p>
+<p>This is the average of the smoothed values within two time periods of time <em>t</em>, in either direction.</p>
+<p>In R, the command<span style="font-family: courier new,courier;"> <span style="font-size: small;">kernel("daniell",c(2,2))</span></span> will supply the coefficients that would be applied to as weights in averaging the original data values for a convoluted Daniell kernel with <em>m</em> = 2 in both smoothings.&nbsp; The result is</p>
+<p><span style="font-size: small;"><span style="font-family: terminal,monaco;">&gt; kernel ("daniell",c(2,2))<br /><span style="font-family: courier new,courier;">coef[-4] = 0.04<br />coef[-3] = 0.08<br />coef[-2] = 0.12<br />coef[-1] = 0.16<br />coef[ 0] = 0.20<br />coef[ 1] = 0.16<br />coef[ 2] = 0.12<br />coef[ 3] = 0.08<br />coef[ 4] = 0.04</span></span></span></p>
+<p>This generates the smoothing formula</p>
+<p style="padding-left: 30px;">\[\hat{x}_t = 0.04x_{t-4} + 0.08x_{t-3} +0.12x_{t-2} +0.16x_{t-1} +0.20x_t +0.16x_{t+1} +0.12x_{t+2} +0.08x_{t+3}+0.04x_{t+4}.\]</p>
+<p>A convolution of the modified method in which the end points have less weight is also possible.&nbsp; The command <span style="font-size: small;"><span style="font-family: terminal,monaco;"><span style="font-family: courier new,courier;">kernel("modified.daniell",c(2,2))</span> </span></span>gives these coefficients:</p>
+<p><span style="font-size: small;"><span style="font-family: courier new,courier;">coef[-4] = 0.01563<br />coef[-3] = 0.06250<br />coef[-2] = 0.12500<br />coef[-1] = 0.18750<br />coef[ 0] = 0.21875<br />coef[ 1] = 0.18750<br />coef[ 2] = 0.12500<br />coef[ 3] = 0.06250<br />coef[ 4] = 0.01563</span></span></p>
+<p>Thus the center values are weighted slightly more heavily than in the unmodified Daniell kernel.</p>
+<p>When we smooth a periodogram, we are smoothing across a frequency interval rather than a time interval.&nbsp; Remember that the periodogram is determined at the fundamental frequencies ω<em><sub>j</sub> </em>= <em>j/n</em> for <em>j </em>= 1, 2, …, <em>n</em>/2.&nbsp; Let <em>I</em>(ω<em><sub>j</sub> </em>) denote the periodogram value at frequency ω<em><sub>j</sub></em> =<em> j/n</em>.&nbsp; When we use a Daniell kernel with parameter <em>m</em> to smooth a periodogram, the smoothed value \(\hat{I}(\omega_j)\) is a weighted average of periodogram values for frequencies in the range (<em>j-m</em>)<em>/n</em> to (<em>j+m</em>)<em>/n</em>.</p>
+<p><strong>Bandwidth</strong></p>
+<p>There are <em>L</em> = 2<em>m</em>+1 fundamental frequency values in the range (<em>j-m</em>)<em>/n</em> to (<em>j+m</em>)<em>/n</em>, the range of values used for smoothing.&nbsp; The bandwidth for the smoothed periodogram is defined as</p>
+<p style="padding-left: 30px;">\[B_\omega = \frac{L}{n}\]</p>
+<p>The bandwidth is a measure of the width of the frequency interval(s) used for smoothing the periodogram.</p>
+<p>When unequal weights are used in the smoothing, the bandwidth definition is modified.&nbsp; Denote the smoothed periodogram value at ω<em><sub>j</sub></em> =<em> j/n</em> as</p>
+<p style="padding-left: 30px;">\[\hat{I}(\omega_j) = \sum^{+m}_{k=-m}h_k I \left(\omega_j + \frac{k}{n}\right).\]</p>
+<p>The <em>h<sub>k</sub> </em>are the possibly unequal weights used in the smoothing.&nbsp; The bandwidth formula is then modified to</p>
+<p style="padding-left: 30px;">\[B_\omega = \frac{L_h}{n} = \frac{1/\sum h^2_k}{n}\]</p>
+<p>Actually, this formula works for equal weights too.</p>
+<p>The bandwidth should be sufficient to smooth our estimate, but if we use a bandwidth that is too great, we’ll smooth out the periodogram too much and miss seeing important peaks. &nbsp; In practice, it usually takes some experimentation to find the bandwidth that gives a suitable smoothing.</p>
+<p>The bandwidth is predominately controlled by the number of values that are averaged in the smoothing.&nbsp; In other words, the <em>m</em> parameter for the Daniell kernel and whether the kernel is convoluted (repeated) affect the bandwidth.</p>
+<p><em>Note:</em>&nbsp; The bandwidths R reports with its plots don’t match the values that would be calculated using the formulas above.&nbsp; Please see the footnote on p. 197 of your text for an explanation.</p>
+<p><strong>R Code</strong></p>
+<p>Averaging/smoothing the periodogram with a Daniell kernel can be accomplished in R using a sequence of two commands.&nbsp; The first defines a Daniell kernel and the second creates the smoothed periodogram.</p>
+<p>As an example, suppose that the observed series is named <em>x</em> and we wish to smooth the periodogram using a Daniell kernel with <em>m</em> = 4.&nbsp; The commands are</p>
+<p style="padding-left: 30px;"><span style="font-family: courier new,courier;"><span style="font-size: small;">k = kernel("daniell", 4)<br />spec.pgram(x, k, taper=0, log = "no")</span></span></p>
+<p>The first command creates the weighting coefficients needed for the smoothing and stores them in a vector named k.&nbsp; (It’s arbitrary to call it k. It could be called anything.)&nbsp; The second command asks for a spectral density estimate based on the periodogram for the series <em>x</em>, using the weighting coefficients stored in k, with no taper, and the plot will be on an ordinary scale, not a log scale.</p>
+<p>If a convolution is desired, the kernel command could be modified to something like<span style="font-family: courier new,courier;"> <span style="font-size: small;">k = kernel("daniell", c(4,4))</span>.</span></p>
+<p>There are two possible ways to achieve a modified Daniell kernel.&nbsp; You can either change the kernel command to refer to the “modified.daniell” rather than “daniell” or you can skip using the kernel command and use a spans parameter in the <span style="font-size: small;"><span style="font-family: terminal,monaco;">spec.pgram</span></span> command.</p>
+<p>The spans parameter gives the length (=2<em>m</em>+1) of the desired modified Daniell kernel.&nbsp; For instance, a modified Daniell kernel with <em>m</em> = 4 has length <em>L</em> = 2<em>m</em>+1 = 9 so the we could use the command</p>
+<p style="padding-left: 30px;"><span style="font-family: courier new,courier;"><span style="font-size: small;">spec.pgram(x, spans=9, taper = 0, log="no")</span></span></p>
+<p>Two passes of a modified Daniell kernel with <em>m</em> = 4 on each pass can be done using</p>
+<p style="padding-left: 30px;"><span style="font-family: courier new,courier;"><span style="font-size: small;">spec.pgram(x, spans=c(9,9), taper = 0, log="no")</span></span></p>
+<p><strong>Example</strong>: This example will use the fish recruitment series that’s used in several places in the text, including several places in chapter 4.&nbsp; The series consists of n = 453 monthly values of a measure of a fish population in a southern hemisphere location.&nbsp; The data are in the file recruit.dat.</p>
+<p>The raw periodogram can be created using the command (or it could be created using the method given in Lesson 6).</p>
+<p style="padding-left: 30px;"><span style="font-family: courier new,courier;"><span style="font-size: small;">spec.pgram(x, taper=0, log="no")</span></span></p>
+<p>Note that in the command just given we have omitted the parameter that gives weights for smoothing.</p>
+<p>The raw periodogram follows:</p>
+<p style="text-align: center;"><img src="/stat510/sites/onlinecourses.science.psu.edu.stat510/files/L12/graph_86.gif" alt="graph" width="317" height="324" /></p>
+<p>The next plot is a smoothed periodogram using a Daniell kernel with <em>m</em> = 4.&nbsp; Note that one effect of the smoothing is that the dominant peak in the unsmoothed version is now the second tallest peak.&nbsp; This happened because the peak is so sharply defined in the unsmoothed version that when we average it with a few surrounding values the height is reduced.</p>
+<p style="text-align: center;"><img src="/stat510/sites/onlinecourses.science.psu.edu.stat510/files/L12/graph_87.gif" alt="graph" width="325" height="335" /></p>
+<p>The next plot is a smoothed periodogram using two passes of a Daniell kernel with <em>m</em> = 4 on each pass.&nbsp; Note how it is even more smoothed than previously.</p>
+<p style="text-align: center;"><img src="/stat510/sites/onlinecourses.science.psu.edu.stat510/files/L12/graph_88.gif" alt="graph" width="301" height="312" /></p>
+<p>To learn where the two dominant peaks are located, assign a name to the <span style="font-size: small;"><span style="font-family: terminal,monaco;">spec.pgram</span></span> output and then you can list it.&nbsp; For instance,</p>
+<p style="padding-left: 30px;"><span style="font-family: courier new,courier;"><span style="font-size: small;">specvalues = spec.pgram(x, k, taper=0, log="no")<br />specvalues</span></span></p>
+<p>You can sift through the output to find the frequencies at which the peaks occur.&nbsp; The frequencies and spectral density estimates are listed separately, but in the same order.&nbsp; Identify the maximum spectral densities and then find the corresponding frequencies.</p>
+<p>Here, the first peak is at a frequency ≈ .0229.&nbsp; The period (number of months) associated with this cycle = 1/.0229 = 43.7 months, or about 44 months.&nbsp; The second peak occurs at a frequency ≈ 0.083333.&nbsp; The associated period = 1/.08333 = 12 months.&nbsp; The first peak is associated with an El Nino weather effect.&nbsp; The second is the usual 12 month seasonal effect.</p>
+<p>These two commands will put vertical dotted lines onto the (estimated) spectral density plot at the approximate locations of the peak densities.</p>
+<p style="padding-left: 30px;"><span style="font-family: courier new,courier;"><span style="font-size: small;">abline(v=1/44, lty="dotted")<br />abline(v=1/12, lty = "dotted")</span></span></p>
+<p>Here’s the resulting plot:</p>
+<p style="text-align: center;"><img src="/stat510/sites/onlinecourses.science.psu.edu.stat510/files/L12/graph_89.gif" alt="graph" width="306" height="318" /></p>
+<p>We’ve smoothed enough, but for demonstration purposes, the next plot is the result of</p>
+<p style="padding-left: 30px;"><span style="font-family: courier new,courier;"><span style="font-size: small;">spec.pgram(x, spans=c(13,13), taper=0, log="no")</span></span></p>
+<p>This uses two passes of a modified Daniell kernel with length <em>L</em> = 13 (so <em>m</em> = 6) each time.&nbsp; The plot is a bit smoother, but not by much.&nbsp; The peaks, by the way, are in exactly the same places as in the plot immediately above.</p>
+<p style="text-align: center;"><img src="/stat510/sites/onlinecourses.science.psu.edu.stat510/files/L12/graph_90.gif" alt="graph" width="295" height="306" /></p>
+<p>It’s definitely possible to smooth too much.&nbsp; Suppose that we were to use a modified Daniell kernel of total length = 73 (<em>m</em> = 36).&nbsp; The command is</p>
+<p style="padding-left: 30px;"><span style="font-family: courier new,courier;"><span style="font-size: small;">spec.pgram(x, spans=73, taper=0, log="no")</span></span></p>
+<p>The result follows. The peaks are gone!</p>
+<p style="text-align: center;"><img src="/stat510/sites/onlinecourses.science.psu.edu.stat510/files/L12/graph_91.gif" alt="graph" width="322" height="333" /></p>
+<p><strong>Parametric Estimation of the Spectral Density</strong></p>
+<p>The smoothing method of spectral density estimation is called a nonparametric method because it doesn’t use any parametric model for the underlying time series process.&nbsp; An alternative method is a parametric method which entails finding the best fitting AR model for the series and then plotting the spectral density of that model.&nbsp; This method is supported by a theorem which says that the spectral density of any time series process can be approximated by the spectral density of an AR model (of some order, possibly a high one).</p>
+<p>In R, parametric estimation of the spectral density is easily done with the command/function <span style="font-size: small;"><span style="font-family: terminal,monaco;">spec.ar</span></span>.&nbsp; A command like <span style="font-family: courier new,courier;"><span style="font-size: small;">spec.ar(x, log="no")</span></span> will cause R to do all of the work.&nbsp; Again, to identify peaks we can assign a name to the <span style="font-size: small;"><span style="font-family: terminal,monaco;">spec.ar</span></span> results by doing something like<span style="font-family: courier new,courier;"> <span style="font-size: small;">specvalues=spec.ar(x, log ="no")</span>.</span></p>
+<p>For the fish recruitment example, the following plot is the result.&nbsp; Note that the density plotted is that of an AR(13) model.&nbsp; We can certainly find more parsimonious ARIMA models for these data.&nbsp; We’re just using the spectral density of that model to approximate the spectral density of the observed series.</p>
+<p style="text-align: center;"><img src="/stat510/sites/onlinecourses.science.psu.edu.stat510/files/L12/graph_92.gif" alt="graph" width="320" height="323" /></p>
+<p>The appearance of the estimated spectral density is about he same as before.&nbsp; The estimated El Nino peak is located at a slightly different place – the frequency is about 0.024 for a cycle of about 1/.024 = about 42 months.</p>
+<p><strong>De-trending</strong></p>
+<p>A series should be de-trended prior to a spectral analysis.&nbsp; A trend will cause such a dominant spectral density at a low frequency that other peaks won’t be seen.&nbsp; By default, the R command <span style="font-family: courier new,courier;"><span style="font-size: small;">spec.pgram</span></span> performs a de-trending using a linear trend model.&nbsp; That is, the spectral density is estimated using the residuals from a regression done where the y-variable = observed data and the x-variable = <em>t</em>.&nbsp; If a different type of trend is present, a quadratic for instance, then a polynomial regression could be used to de-trend the data before the estimated spectral density is explored.&nbsp; Note, however, that the R command<span style="font-family: courier new,courier;"> <span style="font-size: small;">spec.ar</span>,</span> however does not perform a de-trending by default.</p>
+<p><strong>Application of Smoothers to Raw Data</strong></p>
+<p>Note that the smoothers described here could also be applied to raw data.&nbsp; The Daniell kernel and its modifications are simply moving average (or weighted moving average) smoothers.</p>
+  </div>
+</div>
+    
+  </body>
+</html>
